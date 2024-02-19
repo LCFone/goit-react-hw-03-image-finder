@@ -1,17 +1,21 @@
 import { Component } from 'react';
-import { ToastContainer } from 'react-toastify';
-import { requestHits } from 'services/api';
-import { Loader } from './Loader/Loader';
-import { LoadMore } from './Button/Button';
-import { Searchbar } from './SearchBar/Searchbar';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import { Searchbar } from './SearchBar/Searchbar';  
 import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Modal } from './Modal/Modal';
+import { Loader } from './Loader/Loader';
+import { LoadMore } from './Button/Button';
+
+import { requestHits } from 'services/api';
 
 export class App extends Component {
+
   state = {
     modal: {
       isOpen: false,
-      modalData: null,
+      modalData: null
     },
     hits: [],
     isLoading: false,
@@ -19,37 +23,41 @@ export class App extends Component {
     tags: '',
     page: 1,
     query: '',
-    showLoadMore: false,
+    showLoadMore: false
   };
 
   fetchHits = async () => {
     try {
       this.setState({ isLoading: true });
+
       const response = await requestHits(this.state.query, this.state.page);
+
+      if (response.hits.length === 0) {
+        toast.error('No results found for this search. Please try again.');
+        return;
+      }
 
       if (this.state.page === 1) {
         this.setState({
           hits: response.hits,
-          showLoadMore: true,
+          showLoadMore: true
         });
       } else {
         this.setState({
           hits: [...this.state.hits, ...response.hits],
-          showLoadMore: true,
+          showLoadMore: true 
         });
       }
+
     } catch (error) {
-      this.setState({ error: error.message });
+      toast.error(error.message);
     } finally {
       this.setState({ isLoading: false });
     }
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
+    if (prevState.query !== this.state.query || prevState.page !== this.state.page) {
       this.fetchHits();
     }
   }
@@ -60,7 +68,7 @@ export class App extends Component {
 
   handleLoadMore = () => {
     this.setState(prevState => ({
-      page: prevState.page + 1,
+      page: prevState.page + 1
     }));
   };
 
@@ -68,8 +76,8 @@ export class App extends Component {
     this.setState({
       modal: {
         isOpen: true,
-        modalData: modalData,
-      },
+        modalData: modalData
+      }
     });
   };
 
@@ -77,25 +85,38 @@ export class App extends Component {
     this.setState({
       modal: {
         isOpen: false,
-        modalData: null,
-      },
+        modalData: null
+      }
     });
   };
 
   render() {
     return (
       <>
-        <Searchbar
+        <Searchbar 
           onInputChange={this.onInputChange}
-          onSubmit={this.handleSubmit}
+          onSubmit={this.handleSubmit} 
         />
+        
         <ToastContainer autoClose={4000} />
-        <ImageGallery hits={this.state.hits} onOpenModal={this.onOpenModal} />
-        <Loader loading={this.state.isLoading} error={this.state.error} />
-        <LoadMore
-          handleLoadMore={this.handleLoadMore}
-          showLoadMore={this.state.showLoadMore}
+
+        <ImageGallery 
+          hits={this.state.hits}
+          onOpenModal={this.onOpenModal} 
         />
+
+        <Loader 
+          loading={this.state.isLoading}
+          error={this.state.error} 
+        />
+
+        {this.state.hits.length > 0 && (
+          <LoadMore
+            handleLoadMore={this.handleLoadMore}
+            showLoadMore={this.state.showLoadMore}  
+          />
+        )}
+
         <Modal
           onCloseModal={this.onCloseModal}
           data={this.state.modal.modalData}
@@ -104,4 +125,5 @@ export class App extends Component {
       </>
     );
   }
+
 }
